@@ -26,6 +26,9 @@ Spring Boot implementation of the Fast Eat food ordering and delivery tracking A
 - [Fast Eat - Spring Boot Backend](#fast-eat---spring-boot-backend)
   - [Table of Contents](#table-of-contents)
   - [Technology Stack](#technology-stack)
+  - [Connection to Thesis Work](#connection-to-thesis-work)
+    - [Shared Architectural Patterns](#shared-architectural-patterns)
+    - [Technology Continuity](#technology-continuity)
   - [Prerequisites](#prerequisites)
   - [Project Structure](#project-structure)
   - [Quick Start](#quick-start)
@@ -75,6 +78,36 @@ Spring Boot implementation of the Fast Eat food ordering and delivery tracking A
 | **Utilities**     | Lombok, Jackson, MapStruct                |
 | **Testing**       | JUnit 5, Mockito, AssertJ, TestContainers |
 | **Container**     | Docker with multi-stage builds            |
+
+---
+
+## Connection to Thesis Work
+
+This project applies patterns and technologies from my thesis project, a Human Resources Management system built with Spring Boot for enterprise HR workflows.
+
+### Shared Architectural Patterns
+
+| Pattern                            | Thesis                        | This Project (Fast Eat)       |
+| ---------------------------------- | ----------------------------- | ----------------------------- |
+| Architecture Style                 | Multi-module Maven monolith   | Multi-module Maven monolith   |
+| Layer Organization                 | trigger/handler/repository    | trigger/handler/repository    |
+| Domain Design                      | Contact, Employee, Application| User, Menu, Order             |
+| Security                           | Custom @Admin, @HR annotations| Custom @Customer, @Admin      |
+| Event Processing                   | ApplicationEventPublisher     | ApplicationEventPublisher     |
+| DTO Pattern                        | Java Records (nested)         | Java Records (nested)         |
+| Error Handling                     | @ControllerAdvice centralized | @ControllerAdvice centralized |
+| Async Operations                   | @Scheduled cron tasks         | @Scheduled status updates     |
+| Docker Strategy                    | Multi-stage builds            | Multi-stage builds            |
+| Configuration Management           | Profile-based (local/docker)  | Profile-based (local/docker)  |
+
+### Technology Continuity
+
+- Spring Boot 3.2+ with Java 17 (LTS)
+- Spring Data JPA with PostgreSQL (relational data modeling)
+- Spring Security with JWT authentication
+- SpringDoc OpenAPI for automatic API documentation
+- Docker containerization with health checks
+- JUnit 5 + Mockito for testing
 
 ---
 
