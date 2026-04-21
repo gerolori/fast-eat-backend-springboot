@@ -13,6 +13,12 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
 
     Page<Restaurant> findByCityIgnoreCaseAndVisibleTrue(String city, Pageable pageable);
 
+    Page<Restaurant> findByOwnerUserId(UUID ownerUserId, Pageable pageable);
+
+    Optional<Restaurant> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
+
+    Optional<Restaurant> findByIdAndAvailableTrue(UUID id);
+
     Optional<Restaurant> findByIdAndVisibleTrue(UUID id);
 
     boolean existsByOwnerUserIdAndNameIgnoreCase(UUID ownerUserId, String name);

@@ -11,5 +11,11 @@ public interface MenuRepository extends JpaRepository<Menu, UUID> {
 
     Page<Menu> findByRestaurantIdAndAvailableTrue(UUID restaurantId, Pageable pageable);
 
+    Page<Menu> findByRestaurantId(UUID restaurantId, Pageable pageable);
+
+    Optional<Menu> findByIdAndAvailableTrue(UUID id);
+
+    boolean existsByIdAndAvailableTrue(UUID id);
+
     Optional<Menu> findByIdAndRestaurantId(UUID id, UUID restaurantId);
 }
