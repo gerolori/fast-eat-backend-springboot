@@ -64,20 +64,20 @@ class CatalogPersistenceMappingTest {
     }
 
     @Test
-    void findsAvailableRestaurantsByCityIgnoringCase() {
-        Restaurant activeInCity = buildRestaurant("Quezon City");
-        Restaurant unavailableInCity = buildRestaurant("Quezon City");
-        unavailableInCity.setAvailable(false);
-        Restaurant activeElsewhere = buildRestaurant("Makati");
+    void findsVisibleRestaurantsByCityIgnoringCase() {
+        Restaurant visibleInCity = buildRestaurant("Quezon City");
+        Restaurant hiddenInCity = buildRestaurant("Quezon City");
+        hiddenInCity.setVisible(false);
+        Restaurant visibleElsewhere = buildRestaurant("Makati");
 
-        restaurantRepository.save(activeInCity);
-        restaurantRepository.save(unavailableInCity);
-        restaurantRepository.saveAndFlush(activeElsewhere);
+        restaurantRepository.save(visibleInCity);
+        restaurantRepository.save(hiddenInCity);
+        restaurantRepository.saveAndFlush(visibleElsewhere);
 
-        var page = restaurantRepository.findByCityIgnoreCaseAndAvailableTrue("quezon city", PageRequest.of(0, 10));
+        var page = restaurantRepository.findByCityIgnoreCaseAndVisibleTrue("quezon city", PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isEqualTo(1);
-        assertThat(page.getContent().get(0).getName()).isEqualTo(activeInCity.getName());
+        assertThat(page.getContent().get(0).getName()).isEqualTo(visibleInCity.getName());
     }
 
     private Restaurant buildRestaurant(String city) {
@@ -96,6 +96,7 @@ class CatalogPersistenceMappingTest {
         restaurant.setRating(new BigDecimal("4.50"));
         restaurant.setRatingCount(120L);
         restaurant.setAvailable(true);
+        restaurant.setVisible(true);
         return restaurant;
     }
 

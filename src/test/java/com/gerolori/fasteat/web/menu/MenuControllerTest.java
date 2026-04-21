@@ -16,6 +16,7 @@ import com.gerolori.fasteat.config.TraceIdResolver;
 import com.gerolori.fasteat.web.error.GlobalApiExceptionHandler;
 import com.gerolori.fasteat.web.error.ResourceNotFoundException;
 import com.gerolori.fasteat.web.menu.dto.MenuDetailResponse;
+import com.gerolori.fasteat.web.menu.dto.MenuAvailabilityStatus;
 import com.gerolori.fasteat.web.menu.dto.MenuIngredientResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListItemResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListResponse;
@@ -61,6 +62,7 @@ class MenuControllerTest {
                 new MoneyResponse("8.99", "USD"),
                 "https://cdn.example.com/menu.png",
                 true,
+                MenuAvailabilityStatus.AVAILABLE,
                 new java.math.BigDecimal("4.50"),
                 20L,
                 0.5
@@ -119,8 +121,9 @@ class MenuControllerTest {
                 "Detailed description",
                 new MoneyResponse("8.99", "USD"),
                 true,
+                MenuAvailabilityStatus.AVAILABLE,
                 "https://cdn.example.com/menu.png",
-                List.of(new MenuIngredientResponse(UUID.randomUUID(), "Chicken", null, null, false)),
+                List.of(new MenuIngredientResponse(UUID.randomUUID(), "Chicken", "Lean protein", null, true)),
                 Instant.parse("2026-04-20T08:30:00Z")
         );
 
@@ -142,5 +145,20 @@ class MenuControllerTest {
                 .andExpect(jsonPath("$.error").value("RESOURCE_NOT_FOUND"))
                 .andExpect(jsonPath("$.path").value("/menus/" + menuId))
                 .andExpect(jsonPath("$.traceId", not(blankOrNullString())));
+    }
+
+    @Test
+    void getMenuIngredientsReturnsProjectedIngredients() throws Exception {
+        UUID menuId = UUID.randomUUID();
+        UUID ingredientId = UUID.randomUUID();
+        when(menuBrowseService.getMenuIngredients(menuId)).thenReturn(List.of(
+                new MenuIngredientResponse(ingredientId, "Chicken", "Lean protein", "https://cdn.example.com/chicken.png", true)
+        ));
+
+        mockMvc.perform(get("/menus/{menuId}/ingredients", menuId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].ingredientId").value(ingredientId.toString()))
+                .andExpect(jsonPath("$[0].isAvailable").value(true));
     }
 }

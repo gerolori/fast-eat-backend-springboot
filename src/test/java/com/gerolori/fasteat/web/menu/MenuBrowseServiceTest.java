@@ -9,6 +9,7 @@ import com.gerolori.fasteat.domain.entity.Menu;
 import com.gerolori.fasteat.domain.entity.Restaurant;
 import com.gerolori.fasteat.domain.repository.MenuRepository;
 import com.gerolori.fasteat.web.error.ResourceNotFoundException;
+import com.gerolori.fasteat.web.menu.dto.MenuAvailabilityStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -78,6 +79,8 @@ class MenuBrowseServiceTest {
         Ingredient ingredient = new Ingredient();
         ingredient.setId(UUID.randomUUID());
         ingredient.setName("Chicken");
+        ingredient.setSummary("Lean protein");
+        ingredient.setAvailable(true);
         menu.getIngredients().add(ingredient);
 
         when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
@@ -89,6 +92,8 @@ class MenuBrowseServiceTest {
         assertThat(response.price().amount()).isEqualTo("8.99");
         assertThat(response.ingredients()).hasSize(1);
         assertThat(response.ingredients().get(0).ingredientId()).isEqualTo(ingredient.getId());
+        assertThat(response.ingredients().get(0).summary()).isEqualTo("Lean protein");
+        assertThat(response.status()).isEqualTo(MenuAvailabilityStatus.AVAILABLE);
     }
 
     @Test
@@ -130,6 +135,94 @@ class MenuBrowseServiceTest {
                 .containsExactly("Chicken Chicken", "Chicken Bowl", "Protein Bowl");
     }
 
+    @Test
+    void listMenusProjectsAvailabilitySemantics() {
+        Menu soldOut = buildMenu("Sold Out", "Popular", "MAIN", new BigDecimal("9.00"), false, 14.6, 120.9);
+        Menu inactive = buildMenu("Inactive", "Paused", "MAIN", new BigDecimal("9.50"), true, 14.6, 120.9);
+        inactive.setActive(false);
+
+        when(menuRepository.findAll()).thenReturn(List.of(soldOut, inactive));
+
+        var response = service.listMenus(new MenuBrowseQuery(null, null, null, null, null, null, null, null, "name", "asc", 0, 20));
+
+        assertThat(response.items()).extracting(item -> item.status())
+                .containsExactly(MenuAvailabilityStatus.INACTIVE, MenuAvailabilityStatus.SOLD_OUT);
+        assertThat(response.items()).extracting(item -> item.isAvailable())
+                .containsExactly(false, false);
+    }
+
+    @Test
+    void getMenuIngredientsReturnsSortedIngredientProjection() {
+        UUID menuId = UUID.randomUUID();
+        Menu menu = buildMenu("Chicken Bowl", "Balanced meal", "MAIN", new BigDecimal("8.99"), true, 14.6000, 120.9850);
+        menu.setId(menuId);
+
+        Ingredient z = new Ingredient();
+        z.setId(UUID.randomUUID());
+        z.setName("Zucchini");
+        z.setSummary("Fresh");
+        z.setImageUrl("z.png");
+        z.setAvailable(true);
+
+        Ingredient a = new Ingredient();
+        a.setId(UUID.randomUUID());
+        a.setName("Apple");
+        a.setSummary("Crisp");
+        a.setImageUrl("a.png");
+        a.setAvailable(false);
+
+        menu.getIngredients().add(z);
+        menu.getIngredients().add(a);
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+        var ingredients = service.getMenuIngredients(menuId);
+
+        assertThat(ingredients).extracting(i -> i.name()).containsExactly("Apple", "Zucchini");
+        assertThat(ingredients.get(0).isAvailable()).isFalse();
+    }
+
+    @Test
+    void listMenusExcludesMenusFromHiddenRestaurants() {
+        Menu visible = buildMenu("Visible", "Shown", "MAIN", new BigDecimal("9.00"), true, 14.6, 120.9);
+        Menu hidden = buildMenu("Hidden", "Should not leak", "MAIN", new BigDecimal("9.50"), true, 14.6, 120.9);
+        hidden.getRestaurant().setAvailable(true);
+        hidden.getRestaurant().setVisible(false);
+
+        when(menuRepository.findAll()).thenReturn(List.of(hidden, visible));
+
+        var response = service.listMenus(new MenuBrowseQuery(null, null, null, null, null, null, null, null, "name", "asc", 0, 20));
+
+        assertThat(response.items()).extracting(item -> item.name()).containsExactly("Visible");
+    }
+
+    @Test
+    void getMenuThrowsNotFoundWhenRestaurantIsHidden() {
+        UUID menuId = UUID.randomUUID();
+        Menu menu = buildMenu("Hidden", "Should not leak", "MAIN", new BigDecimal("9.50"), true, 14.6, 120.9);
+        menu.setId(menuId);
+        menu.getRestaurant().setAvailable(true);
+        menu.getRestaurant().setVisible(false);
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+        assertThatThrownBy(() -> service.getMenu(menuId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Menu not found");
+    }
+
+    @Test
+    void getMenuIngredientsThrowsNotFoundWhenRestaurantIsHidden() {
+        UUID menuId = UUID.randomUUID();
+        Menu menu = buildMenu("Hidden", "Should not leak", "MAIN", new BigDecimal("9.50"), true, 14.6, 120.9);
+        menu.setId(menuId);
+        menu.getRestaurant().setAvailable(true);
+        menu.getRestaurant().setVisible(false);
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+        assertThatThrownBy(() -> service.getMenuIngredients(menuId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Menu not found");
+    }
+
     private Menu buildMenu(
             String name,
             String summary,
@@ -143,6 +236,7 @@ class MenuBrowseServiceTest {
         restaurant.setId(UUID.randomUUID());
         restaurant.setName("Fast Eat Downtown");
         restaurant.setOwnerUserId(UUID.randomUUID());
+        restaurant.setVisible(true);
         restaurant.setLatitude(latitude);
         restaurant.setLongitude(longitude);
 

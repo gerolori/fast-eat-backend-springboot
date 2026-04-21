@@ -99,6 +99,20 @@ public class GlobalApiExceptionHandler {
         return response(HttpStatus.CONFLICT, exception.getErrorCode(), messageOrDefault(exception, "Business rule violated"), request);
     }
 
+    @ExceptionHandler(ProfileValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleProfileValidationException(
+            ProfileValidationException exception,
+            HttpServletRequest request
+    ) {
+        return response(
+                exception.getStatus(),
+                exception.getErrorCode(),
+                messageOrDefault(exception, "Profile validation failed"),
+                request,
+                exception.getDetails()
+        );
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiErrorResponse> handleGenericException(Exception exception, HttpServletRequest request) {
         return response(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "An unexpected error occurred", request);

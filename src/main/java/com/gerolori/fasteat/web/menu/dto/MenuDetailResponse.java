@@ -13,6 +13,7 @@ public record MenuDetailResponse(
         String description,
         MoneyResponse price,
         boolean isAvailable,
+        MenuAvailabilityStatus status,
         String imageUrl,
         List<MenuIngredientResponse> ingredients,
         Instant updatedAt

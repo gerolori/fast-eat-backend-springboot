@@ -18,14 +18,14 @@ public class RestaurantBrowseService {
     }
 
     public PagedResponse<RestaurantListItemResponse> getRestaurants(int page, int size) {
-        var restaurantPage = restaurantRepository.findByAvailableTrue(PageRequest.of(page, size))
+        var restaurantPage = restaurantRepository.findByVisibleTrue(PageRequest.of(page, size))
                 .map(this::toListItemResponse);
 
         return PagedResponse.from(restaurantPage);
     }
 
     public RestaurantDetailResponse getRestaurant(UUID restaurantId) {
-        Restaurant restaurant = restaurantRepository.findByIdAndAvailableTrue(restaurantId)
+        Restaurant restaurant = restaurantRepository.findByIdAndVisibleTrue(restaurantId)
                 .orElseThrow(() -> new ResourceNotFoundException("Restaurant not found: " + restaurantId));
 
         return toDetailResponse(restaurant);

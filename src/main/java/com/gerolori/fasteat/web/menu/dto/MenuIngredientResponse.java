@@ -5,8 +5,8 @@ import java.util.UUID;
 public record MenuIngredientResponse(
         UUID ingredientId,
         String name,
-        String quantity,
-        String unit,
-        boolean isOptional
+        String summary,
+        String imageUrl,
+        boolean isAvailable
 ) {
 }

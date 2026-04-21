@@ -9,9 +9,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RestaurantRepository extends JpaRepository<Restaurant, UUID> {
 
-    Page<Restaurant> findByAvailableTrue(Pageable pageable);
+    Page<Restaurant> findByVisibleTrue(Pageable pageable);
 
-    Page<Restaurant> findByCityIgnoreCaseAndAvailableTrue(String city, Pageable pageable);
+    Page<Restaurant> findByCityIgnoreCaseAndVisibleTrue(String city, Pageable pageable);
 
-    Optional<Restaurant> findByIdAndAvailableTrue(UUID id);
+    Optional<Restaurant> findByIdAndVisibleTrue(UUID id);
+
+    boolean existsByOwnerUserIdAndNameIgnoreCase(UUID ownerUserId, String name);
+
+    boolean existsByOwnerUserIdAndNameIgnoreCaseAndIdNot(UUID ownerUserId, String name, UUID id);
 }

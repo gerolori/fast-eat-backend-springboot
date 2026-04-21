@@ -33,13 +33,13 @@ class RestaurantBrowseServiceTest {
     }
 
     @Test
-    void returnsAvailableRestaurantsUsingSharedPaginationEnvelope() {
+    void returnsVisibleRestaurantsUsingSharedPaginationEnvelope() {
         Restaurant first = buildRestaurant("Fast Eat One");
         Restaurant second = buildRestaurant("Fast Eat Two");
 
         var pageRequest = PageRequest.of(1, 2);
         var page = new PageImpl<>(List.of(first, second), pageRequest, 5);
-        when(restaurantRepository.findByAvailableTrue(pageRequest)).thenReturn(page);
+        when(restaurantRepository.findByVisibleTrue(pageRequest)).thenReturn(page);
 
         var response = restaurantBrowseService.getRestaurants(1, 2);
 
@@ -55,7 +55,7 @@ class RestaurantBrowseServiceTest {
     }
 
     @Test
-    void returnsRestaurantDetailForAvailableRestaurant() {
+    void returnsRestaurantDetailForVisibleRestaurant() {
         UUID restaurantId = UUID.randomUUID();
         Restaurant restaurant = buildRestaurant("Fast Eat Downtown");
         restaurant.setId(restaurantId);
@@ -63,7 +63,7 @@ class RestaurantBrowseServiceTest {
         restaurant.setLatitude(14.5995);
         restaurant.setLongitude(120.9842);
 
-        when(restaurantRepository.findByIdAndAvailableTrue(restaurantId)).thenReturn(Optional.of(restaurant));
+        when(restaurantRepository.findByIdAndVisibleTrue(restaurantId)).thenReturn(Optional.of(restaurant));
 
         var response = restaurantBrowseService.getRestaurant(restaurantId);
 
@@ -76,9 +76,9 @@ class RestaurantBrowseServiceTest {
     }
 
     @Test
-    void throwsNotFoundWhenRestaurantDoesNotExistOrUnavailable() {
+    void throwsNotFoundWhenRestaurantDoesNotExistOrIsHidden() {
         UUID restaurantId = UUID.randomUUID();
-        when(restaurantRepository.findByIdAndAvailableTrue(restaurantId)).thenReturn(Optional.empty());
+        when(restaurantRepository.findByIdAndVisibleTrue(restaurantId)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> restaurantBrowseService.getRestaurant(restaurantId))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -94,6 +94,7 @@ class RestaurantBrowseServiceTest {
         restaurant.setCategory("CASUAL_DINING");
         restaurant.setImageUrl("https://cdn.example.com/restaurants/fast-eat.jpg");
         restaurant.setAvailable(true);
+        restaurant.setVisible(true);
         restaurant.setRating(new BigDecimal("4.50"));
         restaurant.setRatingCount(120L);
         restaurant.setCity("Makati");

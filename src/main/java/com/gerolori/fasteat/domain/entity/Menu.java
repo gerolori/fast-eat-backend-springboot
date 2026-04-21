@@ -42,6 +42,9 @@ public class Menu extends AuditableEntity {
     @Column(name = "available", nullable = false)
     private boolean available = true;
 
+    @Column(name = "active", nullable = false)
+    private boolean active = true;
+
     @Column(name = "rating", nullable = false, precision = 3, scale = 2)
     private BigDecimal rating = BigDecimal.ZERO;
 

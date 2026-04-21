@@ -1,6 +1,7 @@
 package com.gerolori.fasteat.web.menu;
 
 import com.gerolori.fasteat.web.menu.dto.MenuDetailResponse;
+import com.gerolori.fasteat.web.menu.dto.MenuIngredientResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListResponse;
 import jakarta.validation.constraints.Min;
 import java.math.BigDecimal;
@@ -60,5 +61,10 @@ public class MenuController {
     @GetMapping("/{menuId}")
     public MenuDetailResponse getMenuById(@PathVariable UUID menuId) {
         return menuBrowseService.getMenu(menuId);
+    }
+
+    @GetMapping("/{menuId}/ingredients")
+    public List<MenuIngredientResponse> getMenuIngredients(@PathVariable UUID menuId) {
+        return menuBrowseService.getMenuIngredients(menuId);
     }
 }

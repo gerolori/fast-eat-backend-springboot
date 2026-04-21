@@ -40,6 +40,9 @@ public class Restaurant extends AuditableEntity {
     @Column(name = "available", nullable = false)
     private boolean available = true;
 
+    @Column(name = "visible", nullable = false)
+    private boolean visible = true;
+
     @Column(name = "rating", nullable = false, precision = 3, scale = 2)
     private BigDecimal rating = BigDecimal.ZERO;
 

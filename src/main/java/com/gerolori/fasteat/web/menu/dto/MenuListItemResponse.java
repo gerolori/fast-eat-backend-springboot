@@ -11,6 +11,7 @@ public record MenuListItemResponse(
         MoneyResponse price,
         String imageUrl,
         boolean isAvailable,
+        MenuAvailabilityStatus status,
         BigDecimal rating,
         long ratingCount,
         Double distanceKm

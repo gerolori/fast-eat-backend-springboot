@@ -27,6 +27,24 @@ public class User extends AuditableEntity {
     @Column(name = "password_hash", nullable = false, length = 120)
     private String passwordHash;
 
+    @Column(name = "display_name", length = 120)
+    private String displayName;
+
+    @Column(name = "phone_number", length = 32)
+    private String phoneNumber;
+
+    @Column(name = "payment_provider", length = 64)
+    private String paymentProvider;
+
+    @Column(name = "payment_method_reference", length = 191)
+    private String paymentMethodReference;
+
+    @Column(name = "payment_last4", length = 4)
+    private String paymentLast4;
+
+    @Column(name = "subscription_enabled", nullable = false)
+    private boolean subscriptionEnabled;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

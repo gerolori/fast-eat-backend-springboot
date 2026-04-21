@@ -5,6 +5,7 @@ import com.gerolori.fasteat.domain.entity.Menu;
 import com.gerolori.fasteat.domain.repository.MenuRepository;
 import com.gerolori.fasteat.web.error.ResourceNotFoundException;
 import com.gerolori.fasteat.web.menu.dto.MenuDetailResponse;
+import com.gerolori.fasteat.web.menu.dto.MenuAvailabilityStatus;
 import com.gerolori.fasteat.web.menu.dto.MenuIngredientResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListItemResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListResponse;
@@ -40,6 +41,7 @@ public class MenuBrowseService {
         boolean hasLocationContext = query.lat() != null && query.lng() != null;
 
         List<RankedMenu> filtered = menuRepository.findAll().stream()
+                .filter(this::isRestaurantVisible)
                 .map(menu -> toRankedMenu(menu, query.lat(), query.lng(), hasLocationContext))
                 .filter(rankedMenu -> matchesTextQuery(rankedMenu.menu(), query.q()))
                 .filter(rankedMenu -> matchesCategories(rankedMenu.menu(), categories))
@@ -74,17 +76,13 @@ public class MenuBrowseService {
     public MenuDetailResponse getMenu(UUID menuId) {
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new ResourceNotFoundException("Menu not found: " + menuId));
+        if (!isRestaurantVisible(menu)) {
+            throw new ResourceNotFoundException("Menu not found: " + menuId);
+        }
 
-        List<MenuIngredientResponse> ingredients = menu.getIngredients().stream()
-                .sorted(Comparator.comparing(Ingredient::getName, String.CASE_INSENSITIVE_ORDER))
-                .map(ingredient -> new MenuIngredientResponse(
-                        ingredient.getId(),
-                        ingredient.getName(),
-                        null,
-                        null,
-                        false
-                ))
-                .toList();
+        MenuAvailabilityStatus status = availabilityStatus(menu);
+
+        List<MenuIngredientResponse> ingredients = toIngredientResponses(menu);
 
         return new MenuDetailResponse(
                 menu.getId(),
@@ -92,11 +90,22 @@ public class MenuBrowseService {
                 menu.getSummary(),
                 menu.getDescription(),
                 toMoney(menu),
-                menu.isAvailable(),
+                status == MenuAvailabilityStatus.AVAILABLE,
+                status,
                 menu.getImageUrl(),
                 ingredients,
                 menu.getUpdatedAt()
         );
+    }
+
+    public List<MenuIngredientResponse> getMenuIngredients(UUID menuId) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new ResourceNotFoundException("Menu not found: " + menuId));
+        if (!isRestaurantVisible(menu)) {
+            throw new ResourceNotFoundException("Menu not found: " + menuId);
+        }
+
+        return toIngredientResponses(menu);
     }
 
     private RankedMenu toRankedMenu(Menu menu, Double lat, Double lng, boolean hasLocationContext) {
@@ -125,7 +134,11 @@ public class MenuBrowseService {
     }
 
     private boolean matchesAvailability(Menu menu, Boolean available) {
-        return available == null || menu.isAvailable() == available;
+        if (available == null) {
+            return true;
+        }
+
+        return (availabilityStatus(menu) == MenuAvailabilityStatus.AVAILABLE) == available;
     }
 
     private boolean matchesPriceRange(Menu menu, java.math.BigDecimal minPrice, java.math.BigDecimal maxPrice) {
@@ -218,6 +231,7 @@ public class MenuBrowseService {
     }
 
     private MenuListItemResponse toListItem(Menu menu, Double distanceKm, boolean hasLocationContext) {
+        MenuAvailabilityStatus status = availabilityStatus(menu);
         return new MenuListItemResponse(
                 menu.getId(),
                 menu.getName(),
@@ -225,11 +239,41 @@ public class MenuBrowseService {
                 menu.getCategory(),
                 toMoney(menu),
                 menu.getImageUrl(),
-                menu.isAvailable(),
+                status == MenuAvailabilityStatus.AVAILABLE,
+                status,
                 menu.getRating(),
                 menu.getRatingCount(),
                 hasLocationContext ? distanceKm : null
         );
+    }
+
+    private List<MenuIngredientResponse> toIngredientResponses(Menu menu) {
+        return menu.getIngredients().stream()
+                .sorted(Comparator.comparing(Ingredient::getName, String.CASE_INSENSITIVE_ORDER))
+                .map(ingredient -> new MenuIngredientResponse(
+                        ingredient.getId(),
+                        ingredient.getName(),
+                        ingredient.getSummary(),
+                        ingredient.getImageUrl(),
+                        ingredient.isAvailable()
+                ))
+                .toList();
+    }
+
+    private MenuAvailabilityStatus availabilityStatus(Menu menu) {
+        if (!menu.isActive() || menu.getRestaurant() == null || !menu.getRestaurant().isAvailable()) {
+            return MenuAvailabilityStatus.INACTIVE;
+        }
+
+        if (!menu.isAvailable()) {
+            return MenuAvailabilityStatus.SOLD_OUT;
+        }
+
+        return MenuAvailabilityStatus.AVAILABLE;
+    }
+
+    private boolean isRestaurantVisible(Menu menu) {
+        return menu.getRestaurant() != null && menu.getRestaurant().isVisible();
     }
 
     private MoneyResponse toMoney(Menu menu) {

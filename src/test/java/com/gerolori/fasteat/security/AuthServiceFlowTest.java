@@ -43,6 +43,7 @@ class AuthServiceFlowTest {
         assertThat(registerResult.accessToken()).isNotBlank();
         assertThat(registerResult.refreshToken()).isNotBlank();
         assertThat(registerResult.roles()).contains(RoleName.CUSTOMER);
+        assertThat(registerResult.roles()).doesNotContain(RoleName.ADMIN);
         User persisted = userRepository.findByEmailIgnoreCase("flow-user@fasteat.test").orElseThrow();
         assertThat(persisted.getPasswordHash()).isNotEqualTo("password123");
 
