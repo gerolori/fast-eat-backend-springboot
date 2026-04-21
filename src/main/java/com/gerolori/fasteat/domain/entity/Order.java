@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -21,7 +22,10 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", uniqueConstraints = @UniqueConstraint(name = "uk_order_owner_idempotency", columnNames = {
+        "owner_user_id",
+        "idempotency_key"
+}))
 public class Order extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -40,6 +44,12 @@ public class Order extends AuditableEntity {
 
     @Column(name = "note", length = 1000)
     private String note;
+
+    @Column(name = "idempotency_key", length = 128)
+    private String idempotencyKey;
+
+    @Column(name = "idempotency_hash", length = 64)
+    private String idempotencyHash;
 
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalAmount = BigDecimal.ZERO;

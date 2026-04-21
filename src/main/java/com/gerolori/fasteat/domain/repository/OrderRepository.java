@@ -15,6 +15,9 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     Optional<Order> findByIdAndOwnerUserId(UUID id, UUID ownerUserId);
 
     @EntityGraph(attributePaths = {"items", "items.menu"})
+    Optional<Order> findByOwnerUserIdAndIdempotencyKey(UUID ownerUserId, String idempotencyKey);
+
+    @EntityGraph(attributePaths = {"items", "items.menu"})
     Optional<Order> findById(UUID id);
 
     Page<Order> findByOwnerUserIdOrderByCreatedAtDesc(UUID ownerUserId, Pageable pageable);

@@ -2,6 +2,7 @@ package com.gerolori.fasteat.web.error;
 
 import com.gerolori.fasteat.config.TraceIdResolver;
 import com.gerolori.fasteat.security.JwtAuthenticationException;
+import com.gerolori.fasteat.web.order.OrderApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -110,6 +111,19 @@ public class GlobalApiExceptionHandler {
                 messageOrDefault(exception, "Profile validation failed"),
                 request,
                 exception.getDetails()
+        );
+    }
+
+    @ExceptionHandler(OrderApiException.class)
+    public ResponseEntity<ApiErrorResponse> handleOrderApiException(
+            OrderApiException exception,
+            HttpServletRequest request
+    ) {
+        return response(
+                exception.getStatus(),
+                exception.getErrorCode(),
+                messageOrDefault(exception, "Order request failed"),
+                request
         );
     }
 
