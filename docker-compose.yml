@@ -1,0 +1,47 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: fasteat-backend:local
+    container_name: fasteat-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      FASTEAT_DB_URL: jdbc:postgresql://postgres:5432/fasteat
+      FASTEAT_DB_USERNAME: fasteat
+      FASTEAT_DB_PASSWORD: fasteat
+      FASTEAT_JPA_DDL_AUTO: update
+      FASTEAT_JWT_SECRET: change-me-in-production
+      FASTEAT_JWT_ISSUER: fasteat-docker
+      FASTEAT_SEED_DEMO_ENABLED: "false"
+      FASTEAT_ADMIN_BOOTSTRAP_ENABLED: "false"
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: fasteat-postgres
+    environment:
+      POSTGRES_DB: fasteat
+      POSTGRES_USER: fasteat
+      POSTGRES_PASSWORD: fasteat
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fasteat -d fasteat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+
+# Future upgrade path: add Redis service only when caching/session needs are finalized.
