@@ -4,6 +4,7 @@ import com.gerolori.fasteat.domain.entity.Restaurant;
 import com.gerolori.fasteat.domain.repository.RestaurantRepository;
 import com.gerolori.fasteat.web.error.BusinessRuleViolationException;
 import com.gerolori.fasteat.web.error.ResourceNotFoundException;
+import com.gerolori.fasteat.web.shared.ImageUrlStrategy;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -62,7 +63,7 @@ public class AdminRestaurantService {
         restaurant.setSummary(request.summary());
         restaurant.setDescription(request.description());
         restaurant.setCategory(request.category());
-        restaurant.setImageUrl(request.imageUrl());
+        restaurant.setImageUrl(ImageUrlStrategy.normalize(request.imageUrl()));
         restaurant.setCity(request.city());
         restaurant.setState(request.state());
         restaurant.setCountry(request.country());

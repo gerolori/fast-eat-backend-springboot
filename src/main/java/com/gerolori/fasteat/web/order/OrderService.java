@@ -14,6 +14,8 @@ import com.gerolori.fasteat.web.order.dto.CreateOrderRequest;
 import com.gerolori.fasteat.web.order.dto.OrderItemResponse;
 import com.gerolori.fasteat.web.order.dto.OrderMoneyResponse;
 import com.gerolori.fasteat.web.order.dto.OrderResponse;
+import com.gerolori.fasteat.web.order.dto.OrderTrackingPositionResponse;
+import com.gerolori.fasteat.web.shared.PagedResponse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
@@ -29,12 +31,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class OrderService {
+
+    private static final long DEFAULT_EXPECTED_DELIVERY_MINUTES = 45L;
 
     private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = Map.of(
             OrderStatus.PENDING, Set.of(OrderStatus.CONFIRMED, OrderStatus.CANCELLED),
@@ -95,6 +101,42 @@ public class OrderService {
         }
 
         return toResponse(order);
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<OrderResponse> getMyOrders(UUID ownerUserId, OrderStatus status, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<Order> orders = status == null
+                ? orderRepository.findByOwnerUserIdOrderByCreatedAtDesc(ownerUserId, pageable)
+                : orderRepository.findByOwnerUserIdAndStatusOrderByCreatedAtDesc(ownerUserId, status, pageable);
+
+        return PagedResponse.from(orders.map(this::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<OrderResponse> getMyCompletedOrders(UUID ownerUserId, int page, int size) {
+        return getMyOrders(ownerUserId, OrderStatus.COMPLETED, page, size);
+    }
+
+    @Transactional(readOnly = true)
+    public PagedResponse<OrderResponse> getAdminOrders(OrderStatus status, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        Page<Order> orders = status == null
+                ? orderRepository.findAllByOrderByCreatedAtDesc(pageable)
+                : orderRepository.findByStatusOrderByCreatedAtDesc(status, pageable);
+
+        return PagedResponse.from(orders.map(this::toResponse));
+    }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getAdminOrder(UUID orderId) {
+        Order order = orderRepository.findById(orderId).orElseThrow(() -> notFound(orderId));
+        return toResponse(order);
+    }
+
+    @Transactional
+    public OrderResponse transitionOrderAsAdmin(UUID orderId, OrderStatus targetStatus) {
+        return transitionOrder(null, Set.of(RoleName.ADMIN), orderId, targetStatus);
     }
 
     @Transactional
@@ -256,6 +298,8 @@ public class OrderService {
                 order.getId(),
                 order.getStatus(),
                 order.getStatusUpdatedAt(),
+                expectedDeliveryTimestamp(order),
+                currentPosition(order),
                 order.getOwnerUser().getId(),
                 items,
                 money(order.getTotalAmount()),
@@ -263,6 +307,21 @@ public class OrderService {
                 order.getNote(),
                 order.getCreatedAt()
         );
+    }
+
+    private Instant expectedDeliveryTimestamp(Order order) {
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            return null;
+        }
+        Instant anchor = order.getCreatedAt() != null ? order.getCreatedAt() : order.getStatusUpdatedAt();
+        if (anchor == null) {
+            return null;
+        }
+        return anchor.plusSeconds(DEFAULT_EXPECTED_DELIVERY_MINUTES * 60);
+    }
+
+    private OrderTrackingPositionResponse currentPosition(Order order) {
+        return null;
     }
 
     private OrderMoneyResponse money(BigDecimal value) {

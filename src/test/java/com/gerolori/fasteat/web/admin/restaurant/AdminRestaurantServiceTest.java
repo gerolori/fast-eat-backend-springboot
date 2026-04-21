@@ -48,6 +48,7 @@ class AdminRestaurantServiceTest {
         assertThat(response.available()).isTrue();
         assertThat(response.visible()).isTrue();
         assertThat(response.name()).isEqualTo(request.name());
+        assertThat(response.imageUrl()).isEqualTo("https://cdn.example.com/restaurants/downtown.jpg");
     }
 
     @Test
@@ -135,7 +136,7 @@ class AdminRestaurantServiceTest {
                 "Neighborhood kitchen",
                 "Daily fresh menu",
                 "CASUAL_DINING",
-                "https://cdn.example.com/restaurants/downtown.jpg",
+                " https://cdn.example.com/restaurants/downtown.jpg ",
                 "Makati",
                 "NCR",
                 "Philippines",

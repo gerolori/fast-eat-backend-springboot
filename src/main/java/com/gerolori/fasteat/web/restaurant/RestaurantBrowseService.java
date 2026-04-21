@@ -3,6 +3,7 @@ package com.gerolori.fasteat.web.restaurant;
 import com.gerolori.fasteat.domain.entity.Restaurant;
 import com.gerolori.fasteat.domain.repository.RestaurantRepository;
 import com.gerolori.fasteat.web.error.ResourceNotFoundException;
+import com.gerolori.fasteat.web.shared.ImageUrlStrategy;
 import com.gerolori.fasteat.web.shared.PagedResponse;
 import java.util.UUID;
 import org.springframework.data.domain.PageRequest;
@@ -37,7 +38,7 @@ public class RestaurantBrowseService {
                 restaurant.getName(),
                 restaurant.getSummary(),
                 restaurant.getCategory(),
-                restaurant.getImageUrl(),
+                ImageUrlStrategy.resolveRestaurantImageUrl(restaurant),
                 restaurant.isAvailable(),
                 restaurant.getRating(),
                 restaurant.getRatingCount(),
@@ -54,7 +55,7 @@ public class RestaurantBrowseService {
                 restaurant.getSummary(),
                 restaurant.getDescription(),
                 restaurant.getCategory(),
-                restaurant.getImageUrl(),
+                ImageUrlStrategy.resolveRestaurantImageUrl(restaurant),
                 restaurant.isAvailable(),
                 restaurant.getRating(),
                 restaurant.getRatingCount(),

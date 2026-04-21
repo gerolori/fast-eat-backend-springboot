@@ -52,7 +52,7 @@ class AdminMenuServiceTest {
                 "MAIN",
                 new BigDecimal("8.99"),
                 true,
-                "https://cdn.example.com/menu.png"
+                " https://cdn.example.com/menu.png "
         );
 
         service.createMenu(restaurantId, request);
@@ -61,6 +61,7 @@ class AdminMenuServiceTest {
         verify(menuRepository).save(captor.capture());
         assertThat(captor.getValue().getRestaurant().getId()).isEqualTo(restaurantId);
         assertThat(captor.getValue().isActive()).isTrue();
+        assertThat(captor.getValue().getImageUrl()).isEqualTo("https://cdn.example.com/menu.png");
     }
 
     @Test

@@ -18,6 +18,7 @@ import com.gerolori.fasteat.domain.repository.OrderRepository;
 import com.gerolori.fasteat.domain.repository.UserRepository;
 import com.gerolori.fasteat.web.order.dto.CreateOrderItemRequest;
 import com.gerolori.fasteat.web.order.dto.CreateOrderRequest;
+import com.gerolori.fasteat.web.order.dto.OrderResponse;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -31,6 +32,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 class OrderServiceTest {
 
@@ -75,6 +78,8 @@ class OrderServiceTest {
         assertThat(result.response().status()).isEqualTo(OrderStatus.PENDING);
         assertThat(result.response().total().amount()).isEqualTo("15.00");
         assertThat(result.response().items()).hasSize(1);
+        assertThat(result.response().expectedDeliveryTimestamp()).isEqualTo(Instant.parse("2026-04-20T13:15:00Z"));
+        assertThat(result.response().currentPosition()).isNull();
     }
 
     @Test
@@ -173,6 +178,83 @@ class OrderServiceTest {
 
         assertThat(result.created()).isFalse();
         verify(orderRepository, never()).save(any());
+    }
+
+    @Test
+    void getMyOrdersReturnsPagedHistory() {
+        UUID ownerId = UUID.randomUUID();
+        Order order = new Order();
+        order.setId(UUID.randomUUID());
+        order.setOwnerUser(user(ownerId, "stripe", "pm_abc"));
+        order.setStatus(OrderStatus.COMPLETED);
+        order.setCreatedAt(Instant.parse("2026-04-20T12:30:00Z"));
+        order.setStatusUpdatedAt(Instant.parse("2026-04-20T12:50:00Z"));
+        order.setTotalAmount(new BigDecimal("7.50"));
+        order.setDeliveryAddress("Via Torino 21, Milano");
+
+        when(orderRepository.findByOwnerUserIdAndStatusOrderByCreatedAtDesc(ownerId, OrderStatus.COMPLETED, PageRequest.of(0, 20)))
+                .thenReturn(new PageImpl<>(List.of(order), PageRequest.of(0, 20), 1));
+
+        var page = orderService.getMyOrders(ownerId, OrderStatus.COMPLETED, 0, 20);
+
+        assertThat(page.items()).hasSize(1);
+        assertThat(page.items().get(0).status()).isEqualTo(OrderStatus.COMPLETED);
+    }
+
+    @Test
+    void getMyCompletedOrdersDelegatesToCompletedStatusFilter() {
+        UUID ownerId = UUID.randomUUID();
+        when(orderRepository.findByOwnerUserIdAndStatusOrderByCreatedAtDesc(ownerId, OrderStatus.COMPLETED, PageRequest.of(1, 5)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(1, 5), 0));
+
+        var page = orderService.getMyCompletedOrders(ownerId, 1, 5);
+
+        assertThat(page.items()).isEmpty();
+        assertThat(page.page()).isEqualTo(1);
+        assertThat(page.size()).isEqualTo(5);
+    }
+
+    @Test
+    void getAdminOrdersSupportsStatusFiltering() {
+        UUID ownerId = UUID.randomUUID();
+        Order order = new Order();
+        order.setId(UUID.randomUUID());
+        order.setOwnerUser(user(ownerId, "stripe", "pm_abc"));
+        order.setStatus(OrderStatus.PREPARING);
+        order.setStatusUpdatedAt(Instant.parse("2026-04-20T12:50:00Z"));
+        order.setCreatedAt(Instant.parse("2026-04-20T12:30:00Z"));
+        order.setDeliveryAddress("Via Torino 21, Milano");
+        order.setTotalAmount(new BigDecimal("9.99"));
+
+        when(orderRepository.findByStatusOrderByCreatedAtDesc(OrderStatus.PREPARING, PageRequest.of(0, 10)))
+                .thenReturn(new PageImpl<>(List.of(order), PageRequest.of(0, 10), 1));
+
+        var page = orderService.getAdminOrders(OrderStatus.PREPARING, 0, 10);
+
+        assertThat(page.items()).hasSize(1);
+        assertThat(page.items().get(0).status()).isEqualTo(OrderStatus.PREPARING);
+    }
+
+    @Test
+    void transitionOrderAsAdminProgressesOperationalState() {
+        UUID orderId = UUID.randomUUID();
+        UUID ownerId = UUID.randomUUID();
+
+        Order order = new Order();
+        order.setId(orderId);
+        order.setOwnerUser(user(ownerId, "stripe", "pm_abc"));
+        order.setStatus(OrderStatus.CONFIRMED);
+        order.setStatusUpdatedAt(Instant.parse("2026-04-20T12:40:00Z"));
+        order.setCreatedAt(Instant.parse("2026-04-20T12:30:00Z"));
+        order.setDeliveryAddress("Via Torino 21, Milano");
+        order.setTotalAmount(new BigDecimal("10.00"));
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        OrderResponse response = orderService.transitionOrderAsAdmin(orderId, OrderStatus.PREPARING);
+
+        assertThat(response.status()).isEqualTo(OrderStatus.PREPARING);
     }
 
     private User user(UUID id, String provider, String reference) {

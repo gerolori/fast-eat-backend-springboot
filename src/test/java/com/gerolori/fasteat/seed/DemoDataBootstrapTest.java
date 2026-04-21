@@ -4,10 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gerolori.fasteat.domain.entity.OrderStatus;
 import com.gerolori.fasteat.domain.entity.RoleName;
+import com.gerolori.fasteat.domain.repository.MenuRepository;
 import com.gerolori.fasteat.domain.repository.OrderRepository;
+import com.gerolori.fasteat.domain.repository.RestaurantRepository;
 import com.gerolori.fasteat.domain.repository.RoleRepository;
 import com.gerolori.fasteat.domain.repository.UserRepository;
 import java.util.EnumSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,12 @@ class DemoDataBootstrapTest {
     private UserRepository userRepository;
 
     @Autowired
+    private RestaurantRepository restaurantRepository;
+
+    @Autowired
+    private MenuRepository menuRepository;
+
+    @Autowired
     private OrderRepository orderRepository;
 
     @Test
@@ -35,6 +44,12 @@ class DemoDataBootstrapTest {
         assertThat(userRepository.findByEmailIgnoreCase("admin@fasteat.local")).isPresent();
         assertThat(userRepository.findByEmailIgnoreCase("owner@fasteat.local")).isPresent();
         assertThat(userRepository.findByEmailIgnoreCase("customer@fasteat.local")).isPresent();
+
+        assertThat(restaurantRepository.findAll().stream().map(restaurant -> restaurant.getName()))
+                .containsAll(Set.of("Fast Eat Downtown Kitchen", "Fast Eat Uptown Kitchen"));
+
+        assertThat(menuRepository.findAll().stream().map(menu -> menu.getName()))
+                .containsAll(Set.of("Classic Burger Combo", "Chicken Rice Bowl", "Creamy Mushroom Pasta"));
 
         var statuses = orderRepository.findAll().stream()
                 .map(order -> order.getStatus())

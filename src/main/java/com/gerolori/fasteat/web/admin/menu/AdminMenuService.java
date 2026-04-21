@@ -6,6 +6,7 @@ import com.gerolori.fasteat.domain.repository.MenuRepository;
 import com.gerolori.fasteat.domain.repository.RestaurantRepository;
 import com.gerolori.fasteat.web.error.ResourceNotFoundException;
 import com.gerolori.fasteat.web.menu.dto.MoneyResponse;
+import com.gerolori.fasteat.web.shared.ImageUrlStrategy;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,7 +70,7 @@ public class AdminMenuService {
         menu.setDescription(request.description());
         menu.setCategory(request.category());
         menu.setPrice(request.price());
-        menu.setImageUrl(request.imageUrl());
+        menu.setImageUrl(ImageUrlStrategy.normalize(request.imageUrl()));
         menu.setAvailable(request.available() == null || request.available());
         if (menu.getId() == null) {
             menu.setActive(true);

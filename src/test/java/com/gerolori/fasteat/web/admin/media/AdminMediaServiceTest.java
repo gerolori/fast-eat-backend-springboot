@@ -39,10 +39,11 @@ class AdminMediaServiceTest {
         restaurant.setId(restaurantId);
         when(restaurantRepository.findById(restaurantId)).thenReturn(Optional.of(restaurant));
 
-        var response = service.updateRestaurantImage(restaurantId, "https://cdn.example.com/rest.jpg");
+        var response = service.updateRestaurantImage(restaurantId, " https://cdn.example.com/rest.jpg ");
 
         assertThat(restaurant.getImageUrl()).isEqualTo("https://cdn.example.com/rest.jpg");
         assertThat(response.resourceId()).isEqualTo(restaurantId);
+        assertThat(response.imageUrl()).isEqualTo("https://cdn.example.com/rest.jpg");
     }
 
     @Test

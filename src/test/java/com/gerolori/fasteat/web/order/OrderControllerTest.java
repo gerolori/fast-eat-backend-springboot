@@ -16,6 +16,7 @@ import com.gerolori.fasteat.security.AuthPrincipal;
 import com.gerolori.fasteat.web.error.GlobalApiExceptionHandler;
 import com.gerolori.fasteat.web.order.dto.OrderMoneyResponse;
 import com.gerolori.fasteat.web.order.dto.OrderResponse;
+import com.gerolori.fasteat.web.shared.PagedResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -130,6 +131,37 @@ class OrderControllerTest {
     }
 
     @Test
+    void getMyOrdersReturnsPagedOrderHistory() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID orderId = UUID.randomUUID();
+        when(orderService.getMyOrders(userId, OrderStatus.COMPLETED, 0, 1))
+                .thenReturn(new PagedResponse<>(List.of(order(orderId, userId)), 0, 1, 1, 1, false, false));
+
+        mockMvc.perform(get("/orders/me")
+                        .principal(authentication(userId, Set.of(RoleName.CUSTOMER)))
+                        .param("status", "COMPLETED")
+                        .param("page", "0")
+                        .param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items[0].orderId").value(orderId.toString()))
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(1));
+    }
+
+    @Test
+    void getMyCompletedOrdersUsesCompletedHistoryRoute() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(orderService.getMyCompletedOrders(userId, 0, 20))
+                .thenReturn(new PagedResponse<>(List.of(), 0, 20, 0, 0, false, false));
+
+        mockMvc.perform(get("/orders/me/completed")
+                        .principal(authentication(userId, Set.of(RoleName.CUSTOMER))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(20));
+    }
+
+    @Test
     void patchOrderReturnsStableTransitionError() throws Exception {
         UUID userId = UUID.randomUUID();
         UUID orderId = UUID.randomUUID();
@@ -158,6 +190,8 @@ class OrderControllerTest {
                 orderId,
                 OrderStatus.PENDING,
                 Instant.parse("2026-04-20T12:30:00Z"),
+                Instant.parse("2026-04-20T13:15:00Z"),
+                null,
                 userId,
                 List.of(),
                 new OrderMoneyResponse("10.00", "USD"),

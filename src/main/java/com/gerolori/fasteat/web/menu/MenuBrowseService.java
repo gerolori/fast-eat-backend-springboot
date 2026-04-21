@@ -10,6 +10,7 @@ import com.gerolori.fasteat.web.menu.dto.MenuIngredientResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListItemResponse;
 import com.gerolori.fasteat.web.menu.dto.MenuListResponse;
 import com.gerolori.fasteat.web.menu.dto.MoneyResponse;
+import com.gerolori.fasteat.web.shared.ImageUrlStrategy;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -92,7 +93,7 @@ public class MenuBrowseService {
                 toMoney(menu),
                 status == MenuAvailabilityStatus.AVAILABLE,
                 status,
-                menu.getImageUrl(),
+                ImageUrlStrategy.resolveMenuImageUrl(menu),
                 ingredients,
                 menu.getUpdatedAt()
         );
@@ -238,7 +239,7 @@ public class MenuBrowseService {
                 menu.getSummary(),
                 menu.getCategory(),
                 toMoney(menu),
-                menu.getImageUrl(),
+                ImageUrlStrategy.resolveMenuImageUrl(menu),
                 status == MenuAvailabilityStatus.AVAILABLE,
                 status,
                 menu.getRating(),

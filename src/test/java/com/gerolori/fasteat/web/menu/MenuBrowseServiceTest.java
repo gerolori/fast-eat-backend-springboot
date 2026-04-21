@@ -223,6 +223,25 @@ class MenuBrowseServiceTest {
                 .hasMessageContaining("Menu not found");
     }
 
+    @Test
+    void menuImageProjectionFallsBackToRestaurantImageAcrossListAndDetail() {
+        UUID menuId = UUID.randomUUID();
+        Menu menu = buildMenu("Chicken Bowl", "Balanced meal", "MAIN", new BigDecimal("8.99"), true, 14.6000, 120.9850);
+        menu.setId(menuId);
+        menu.setImageUrl("   ");
+        menu.getRestaurant().setImageUrl(" https://cdn.example.com/restaurants/fallback.png ");
+
+        when(menuRepository.findAll()).thenReturn(List.of(menu));
+        when(menuRepository.findById(menuId)).thenReturn(Optional.of(menu));
+
+        var listResponse = service.listMenus(new MenuBrowseQuery(null, null, null, null, null, null, null, null, "name", "asc", 0, 20));
+        var detailResponse = service.getMenu(menuId);
+
+        assertThat(listResponse.items()).hasSize(1);
+        assertThat(listResponse.items().get(0).imageUrl()).isEqualTo("https://cdn.example.com/restaurants/fallback.png");
+        assertThat(detailResponse.imageUrl()).isEqualTo("https://cdn.example.com/restaurants/fallback.png");
+    }
+
     private Menu buildMenu(
             String name,
             String summary,

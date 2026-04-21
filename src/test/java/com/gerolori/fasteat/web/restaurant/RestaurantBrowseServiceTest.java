@@ -85,6 +85,25 @@ class RestaurantBrowseServiceTest {
                 .hasMessage("Restaurant not found: " + restaurantId);
     }
 
+    @Test
+    void restaurantImageProjectionNormalizesWhitespaceAcrossListAndDetail() {
+        UUID restaurantId = UUID.randomUUID();
+        Restaurant restaurant = buildRestaurant("Fast Eat Downtown");
+        restaurant.setId(restaurantId);
+        restaurant.setImageUrl("  https://cdn.example.com/restaurants/normalized.jpg  ");
+
+        var pageRequest = PageRequest.of(0, 20);
+        var page = new PageImpl<>(List.of(restaurant), pageRequest, 1);
+        when(restaurantRepository.findByVisibleTrue(pageRequest)).thenReturn(page);
+        when(restaurantRepository.findByIdAndVisibleTrue(restaurantId)).thenReturn(Optional.of(restaurant));
+
+        var listResponse = restaurantBrowseService.getRestaurants(0, 20);
+        var detailResponse = restaurantBrowseService.getRestaurant(restaurantId);
+
+        assertThat(listResponse.items().get(0).imageUrl()).isEqualTo("https://cdn.example.com/restaurants/normalized.jpg");
+        assertThat(detailResponse.imageUrl()).isEqualTo("https://cdn.example.com/restaurants/normalized.jpg");
+    }
+
     private Restaurant buildRestaurant(String name) {
         Restaurant restaurant = new Restaurant();
         restaurant.setId(UUID.randomUUID());

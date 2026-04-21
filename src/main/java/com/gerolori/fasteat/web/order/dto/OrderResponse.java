@@ -9,6 +9,8 @@ public record OrderResponse(
         UUID orderId,
         OrderStatus status,
         Instant statusUpdatedAt,
+        Instant expectedDeliveryTimestamp,
+        OrderTrackingPositionResponse currentPosition,
         UUID ownerUserId,
         List<OrderItemResponse> items,
         OrderMoneyResponse total,
