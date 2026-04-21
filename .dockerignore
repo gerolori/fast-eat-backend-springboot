@@ -1,0 +1,13 @@
+.git
+.gitignore
+.idea
+.vscode
+.beads
+worktrees
+target
+build
+out
+*.iml
+*.log
+README.md
+docs
