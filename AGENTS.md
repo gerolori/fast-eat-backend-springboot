@@ -81,7 +81,7 @@
 
 Epics: `P0`, `F1`, `D1`, `S1`, `A1`, `A2`, `O1`, `P1`, `T1`, `L1`, `X1`, `X2`, `X3`
 
-- `P0` (track:planning): reset Beads and align planning docs
+- `P0` (track:planning): audit Beads state and align planning docs
 - `F1` (track:foundation): single-module backend baseline
 - `D1` (track:domain): domain contract and persistence model
 - `S1` (track:security): security and authentication baseline
