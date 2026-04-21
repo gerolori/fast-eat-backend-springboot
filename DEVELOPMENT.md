@@ -5,7 +5,7 @@ This guide provides detailed information for developers working on the Spring Bo
 ## Table of Contents
 
 - [Development Roadmap](#development-roadmap)
-- [Module Implementation Guide](#module-implementation-guide)
+- [Module Evolution Plan](#module-evolution-plan)
 - [Development Workflow](#development-workflow)
 - [Code Organization](#code-organization)
 - [Database Management](#database-management)
@@ -21,13 +21,13 @@ This guide provides detailed information for developers working on the Spring Bo
 ### Phase 1: Foundation
 
 **Goals:**
-- Set up multi-module Maven project
+- Bootstrap a single-module Spring Boot backend first
 - Configure PostgreSQL database
 - Establish Docker development environment
 - Create base entity classes
 
 **Tasks:**
-- Create Maven parent POM with module structure
+- Keep a single Spring Boot module for initial delivery speed
 - Configure Spring Boot parent and dependency management
 - Set up PostgreSQL schema (tables for User, Menu, Ingredient, Order)
 - Create docker-compose.yml with PostgreSQL and application services
@@ -36,7 +36,7 @@ This guide provides detailed information for developers working on the Spring Bo
 - Set up application.yml for local and docker profiles
 
 **Deliverables:**
-- Multi-module Maven project structure
+- Working single-module Spring Boot project structure
 - PostgreSQL database running in Docker
 - Base entities with JPA annotations
 - Repository interfaces extending JpaRepository
@@ -123,7 +123,11 @@ This guide provides detailed information for developers working on the Spring Bo
 
 ---
 
-## Module Implementation Guide
+## Module Evolution Plan
+
+The current bootstrap approach is **single-module first**. Keep package boundaries clean so the codebase can be split later with low churn.
+
+The module sections below describe the **target split** once boundaries have stabilized and migration risk is low.
 
 ### fast-eat-domain
 
@@ -322,7 +326,7 @@ Before submitting a pull request, ensure:
 ### Package Structure
 
 ```
-com.fasteat
+com.gerolori.fasteat
 ├── api/                 # Controllers, DTOs
 │   ├── controller/
 │   ├── dto/
@@ -490,7 +494,7 @@ backend:
 logging:
   level:
     root: INFO
-    com.fasteat: DEBUG
+    com.gerolori.fasteat: DEBUG
     org.springframework.security: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
@@ -645,8 +649,8 @@ curl http://localhost:8080/actuator/metrics/http.server.requests
 # Build project
 mvn clean install
 
-# Run application
-mvn spring-boot:run -pl fast-eat-api
+# Run application (single-module project)
+mvn spring-boot:run
 
 # Run tests
 mvn test                    # Unit tests only

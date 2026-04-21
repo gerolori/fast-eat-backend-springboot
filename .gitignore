@@ -204,3 +204,11 @@ README.html
 *.iml
 .idea
 .exercism
+
+# bv (beads viewer) local config and caches
+.bv/
+
+# beads runtime noise
+.beads/.br_history/
+.beads/.bv.lock
+.beads/issues.jsonl.tmp

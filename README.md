@@ -564,7 +564,6 @@ This project is for educational and portfolio purposes.
 
 - **University:** Università degli Studi di Milano
 - **Course:** Mobile Computing 2024/25
-- **Thesis Reference:** HRM "Airing" Application (enterprise Spring Boot patterns)
 
 ---
 
