@@ -55,6 +55,60 @@ Use Maven wrapper commands in docs and automation to avoid environment drift.
 3. For docs-only updates, run docs-appropriate verification (for example: `git status --short --branch`).
 4. For code changes, run the narrowest relevant Maven command before handoff.
 
+## Lint/Quality Gate Policy (Current + Ratchet Path)
+
+Current enforcement is through `mvnw.cmd verify` in Maven lifecycle:
+
+- Spotless (`spotless:check`) for formatting discipline.
+- Checkstyle (`maven-checkstyle-plugin:check`) for style rules.
+- SpotBugs (`spotbugs:check`) for high-threshold static analysis.
+- JaCoCo coverage check (line coverage minimum configured in `pom.xml`).
+
+Policy for this lane:
+
+- Today: keep `verify` green for code-impacting work; docs-only work can use docs/beads checks.
+- Immediate ratchet rule: new or touched files must satisfy existing gates without weakening plugin settings.
+- Future ratchet steps (stricter rules, threshold increases, suppression burn-down) happen in dedicated follow-up tasks, each keeping mainline green.
+- Avoid broad cleanup-only churn in feature lanes; do cleanup in focused lint-hardening tasks.
+
+This keeps quality checks enforceable now while allowing controlled tightening later.
+
+## Redis Upgrade Path (Deferred by Policy)
+
+Redis is intentionally deferred in the current baseline:
+
+- Primary runtime path stays PostgreSQL-first.
+- `docker-compose.yml` does not currently run a Redis service.
+- No feature should require Redis availability in current local/CI default flows.
+
+If Redis is introduced later, do it as a scoped follow-up lane:
+
+1. Add runtime surface deliberately (Compose service, env contract, and profile documentation).
+2. Add explicit Spring configuration for the first approved use case (for example cache or session concerns).
+3. Add verification coverage for the Redis-backed behavior while preserving a safe fallback path.
+4. Update docs/beads artifacts in the same lane so default expectations remain truthful.
+
+## Local Pre-Push Quality Check Guidance
+
+Before pushing a branch with code/config changes, run the same baseline quality gate used in CI:
+
+- `mvnw.cmd -B verify`
+
+For container-related changes (for example Dockerfile or runtime profile wiring), also run a local container build validation:
+
+- `docker build --file Dockerfile --tag fast-eat-backend:local-check .`
+
+If either check fails, fix locally before pushing to avoid CI failures.
+
+## Required Checks and Branch Protection Policy
+
+For protected integration branches (for example `develop`/`main`), require pull requests and require the CI Baseline workflow checks to pass:
+
+- `verify`
+- `container-build-validation`
+
+Keep the required-check list aligned with `.github/workflows/ci-baseline.yml` job names.
+
 ## Future Module Split Policy
 
 Module extraction is a **future-state decision** tracked under late-split planning work.

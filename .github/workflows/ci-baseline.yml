@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  test:
+  verify:
     runs-on: windows-latest
 
     steps:
@@ -19,5 +19,16 @@ jobs:
           java-version: '17'
           cache: maven
 
-      - name: Run Maven test baseline
-        run: ./mvnw.cmd test
+      - name: Run Maven verify quality gates (Spotless, Checkstyle, SpotBugs)
+        run: ./mvnw.cmd -B verify
+
+  container-build-validation:
+    needs: verify
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build backend container image
+        run: docker build --file Dockerfile --tag fast-eat-backend:ci .

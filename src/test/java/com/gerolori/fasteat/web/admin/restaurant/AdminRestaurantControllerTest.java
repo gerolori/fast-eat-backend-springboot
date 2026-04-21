@@ -24,13 +24,15 @@ import com.gerolori.fasteat.web.error.ResourceNotFoundException;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+@ExtendWith(MockitoExtension.class)
 class AdminRestaurantControllerTest {
 
     @Mock
@@ -44,8 +46,6 @@ class AdminRestaurantControllerTest {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
         LocalValidatorFactoryBean validator = new LocalValidatorFactoryBean();
         validator.afterPropertiesSet();
 
@@ -123,7 +123,6 @@ class AdminRestaurantControllerTest {
     @Test
     void rejectsMissingAvailabilityFieldInStatusPatch() throws Exception {
         UUID restaurantId = UUID.randomUUID();
-        doNothing().when(accessGuard).requireAdmin(any());
 
         mockMvc.perform(patch("/admin/restaurants/{restaurantId}/status", restaurantId)
                         .contentType("application/json")
@@ -137,7 +136,6 @@ class AdminRestaurantControllerTest {
     @Test
     void rejectsMissingVisibilityFieldInVisibilityPatch() throws Exception {
         UUID restaurantId = UUID.randomUUID();
-        doNothing().when(accessGuard).requireAdmin(any());
 
         mockMvc.perform(patch("/admin/restaurants/{restaurantId}/visibility", restaurantId)
                         .contentType("application/json")

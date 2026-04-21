@@ -25,7 +25,7 @@ class AuditableEntityPersistenceTest {
     private TestEntityManager entityManager;
 
     @Test
-    void persistsUuidIdentityAndAuditTimestamps() throws InterruptedException {
+    void persistsUuidIdentityAndAuditTimestamps() {
         PersistenceProbeEntity entity = new PersistenceProbeEntity();
         entity.setName("created");
 
@@ -38,7 +38,6 @@ class AuditableEntityPersistenceTest {
         Instant createdAt = persisted.getCreatedAt();
         Instant firstUpdatedAt = persisted.getUpdatedAt();
 
-        Thread.sleep(5);
         persisted.setName("updated");
         entityManager.persistAndFlush(persisted);
         entityManager.clear();

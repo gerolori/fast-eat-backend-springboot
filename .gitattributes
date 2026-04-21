@@ -1,0 +1,17 @@
+# Normalize text files to LF in repository.
+* text=auto eol=lf
+
+# Keep Windows-native scripts on CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary assets.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.jar binary
+*.war binary
