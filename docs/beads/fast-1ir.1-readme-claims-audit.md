@@ -1,13 +1,18 @@
 # fast-1ir.1 — Audit README claims against current and target publish state
 
+> **Historical snapshot note (important):**
+> This audit captures repository/readme truth **at the start of the fast-1ir lane** (pre-alignment).
+> In this branch, `fast-1ir.2/.3/.4/.5` have since updated `README.md`, so statements below should be read as
+> **"true/false at audit time"**, not as current branch head status.
+
 ## Scope
 
-- Audited artifact: `README.md` (current `develop` baseline in this lane worktree)
-- Audit goal: classify README claims as:
-  - **true now**
-  - **false now but planned**
+- Audited artifact: `README.md` (then-current `develop` baseline at audit time in this lane worktree)
+- Audit goal: classify README claims (at audit time) as:
+  - **true then**
+  - **false then but planned**
   - **false/stale and should be removed later**
-- This is an audit only (no README rewrite in this task).
+- This is an audit-only record (no README rewrite in `fast-1ir.1`).
 
 ## Evidence baseline used
 
@@ -32,7 +37,7 @@ So claims tied to those open lanes are classified as **false now but planned**.
 
 ---
 
-## A) True now
+## A) True at audit time
 
 1. **Java 17 baseline** (`README.md` stack/prereq sections)
    - Evidence: `pom.xml` -> `<java.version>17</java.version>`
@@ -47,7 +52,7 @@ So claims tied to those open lanes are classified as **false now but planned**.
 6. **Architecture links to companion repos exist**
    - Evidence: README links are present and internally consistent as references (no local contradiction)
 
-## B) False now but planned
+## B) False at audit time but planned
 
 1. **Docker quick start and Docker setup sections are currently actionable**
    - README claims Docker-first flow (`docker-compose up`, Dockerfile/compose snippets, Make targets)
